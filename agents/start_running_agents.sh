@@ -42,8 +42,8 @@ echo "Using DOMAIN_NAME=$DOMAIN_NAME"
 echo "Using REGISTRY_URL=$REGISTRY_URL"
 
 # SSL Configuration
-CERT_PATH="/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem"  # Path to SSL certificate
-KEY_PATH="/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem"   # Path to SSL private key
+CERT_PATH="$HOME/.local/ssl/fullchain.pem"  # Path to SSL certificate
+KEY_PATH="$HOME/.local/ssl/privkey.pem"     # Path to SSL private key
 
 # Create logs directory if it doesn't exist
 mkdir -p logs

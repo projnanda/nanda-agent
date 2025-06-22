@@ -64,8 +64,9 @@ START_API_PORT=6001
    ```
 
 2. Ensure SSL certificates are in place:
-   - Certificate: `/etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem`
-   - Private key: `/etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem`
+- Certificate: `~/.local/ssl/fullchain.pem`
+- Private key: `~/.local/ssl/privkey.pem`
+- CSR (temporary): `~/.local/ssl/cert.csr`
 
 3. Make the script executable:
    ```bash
