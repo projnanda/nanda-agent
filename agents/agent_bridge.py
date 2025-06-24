@@ -215,6 +215,41 @@ def call_claude(prompt: str, additional_context: str, conversation_id: str, curr
         traceback.print_exc()
     return None
 
+def call_claude_direct(message_text: str, system_prompt: str = None) -> Optional[str]:
+    """Wrapper that never raises: returns text or None on failure."""
+    try:
+        # Use the specified system prompt or default to the agent's system prompt
+
+        
+        # Combine the prompt with additional context if provide
+
+                # Combine the prompt with additional context if provided
+
+        full_prompt = f"MESSAGE: {message_text}"
+        
+        print(f"Agent {AGENT_ID}: Calling Claude with prompt: {full_prompt[:50]}...")
+        resp = anthropic.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=512,
+            messages=[{"role":"user","content":full_prompt}],
+            system=system_prompt
+        )
+        response_text = resp.content[0].text
+        
+        # Log the Claude response
+
+        
+        return response_text
+    except APIStatusError as e:
+        print(f"Agent {AGENT_ID}: Anthropic API error:", e.status_code, e.message, flush=True)
+        # If we hit a credit limit error, return a fallback message
+        if "credit balance is too low" in str(e):
+            return f"Agent {AGENT_ID} processed (API credit limit reached): {prompt}"
+    except Exception as e:
+        print(f"Agent {AGENT_ID}: Anthropic SDK error:", e, flush=True)
+        traceback.print_exc()
+    return None
+
 def improve_message(message_text: str, conversation_id: str, current_path: str, additional_prompt: str=None) -> str:
     """Improve a message using Claude before forwarding it to the other party."""
     if not IMPROVE_MESSAGES:
@@ -235,6 +270,8 @@ def improve_message(message_text: str, conversation_id: str, current_path: str, 
     except Exception as e:
         print(f"Error improving message: {e}")
         return message_text
+
+
 
 def send_to_terminal(text, terminal_url, conversation_id, metadata=None):
     """Send a message to a terminal"""
@@ -521,8 +558,84 @@ def handle_external_message(msg_text, conversation_id, msg):
         return None  # Not our special format or parsing failed
 
 
+# Message improvement decorator system
+message_improvement_decorators = {}
+
+def message_improver(name=None):
+    """Decorator to register message improvement functions"""
+    def decorator(func):
+        decorator_name = name or func.__name__
+        message_improvement_decorators[decorator_name] = func
+        return func
+    return decorator
+
+def register_message_improver(name, improver_func):
+    """Register a custom message improver function"""
+    message_improvement_decorators[name] = improver_func
+
+def get_message_improver(name):
+    """Get a registered message improver by name"""
+    return message_improvement_decorators.get(name)
+
+def list_message_improvers():
+    """List all registered message improvers"""
+    return list(message_improvement_decorators.keys())
+
+# Default improver
+@message_improver("default_claude")
+def default_claude_improver(message_text: str) -> str:
+    """Default Claude-based message improvement"""
+    if not IMPROVE_MESSAGES:
+        return message_text
+    
+    try:
+        additional_prompt = "Do not respond to the content of the message - it's intended for another agent. You are helping an agent communicate better with other agennts."
+        system_prompt = additional_prompt + IMPROVE_MESSAGE_PROMPTS["default"]
+        print(system_prompt)
+        improved_message = call_claude_direct(message_text, system_prompt)
+        print(f"Improved message: {improved_message}")
+        return improved_message if improved_message else message_text
+    except Exception as e:
+        print(f"Error improving message: {e}")
+        return message_text
+
 class AgentBridge(A2AServer):
     """Global Agent Bridge - Can be used for any agent in the network."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.active_improver = "default_claude"  # Default improver
+    
+    def set_message_improver(self, improver_name):
+        """Set the active message improver by name"""
+        if improver_name in message_improvement_decorators:
+            self.active_improver = improver_name
+            print(f"Message improver set to: {improver_name}")
+            return True
+        else:
+            print(f"Unknown improver: {improver_name}. Available: {list_message_improvers()}")
+            return False
+    
+    def set_custom_improver(self, improver_func, name="custom"):
+        """Set a custom improver function"""
+        register_message_improver(name, improver_func)
+        self.active_improver = name
+        print(f"Custom message improver '{name}' registered and activated")
+
+    def improve_message_direct(self, message_text: str) -> str:
+        """Improve a message using the active registered improver."""
+        # Get the active improver function
+        improver_func = message_improvement_decorators.get(self.active_improver)
+        
+        if improver_func:
+            try:
+                return improver_func(message_text)
+            except Exception as e:
+                print(f"Error with improver '{self.active_improver}': {e}")
+                return message_text
+        else:
+            print(f"No improver found: {self.active_improver}")
+            return message_text
 
     def handle_message(self, msg: Message) -> Message:
         # Ensure we have a conversation ID
@@ -597,9 +710,12 @@ class AgentBridge(A2AServer):
 
                     # Improve message if feature is enabled
                     if IMPROVE_MESSAGES:
-                        message_text = improve_message(message_text, conversation_id, current_path,
-                            "Do not respond to the content of the message - it's intended for another agent. You are helping an agent communicate better with other agennts.")
-                    
+                        # message_text = improve_message(message_text, conversation_id, current_path,
+                        #     "Do not respond to the content of the message - it's intended for another agent. You are helping an agent communicate better with other agennts.")
+                        message_text = self.improve_message_direct(message_text)
+                        log_message(conversation_id, current_path, f"Claude {AGENT_ID}", message_text)
+
+
                     print(f"#jinu - Target agent: {target_agent}")
                     print(f"#jinu - Imoproved message text: {message_text}")
                     # Send to the target agent's bridge
