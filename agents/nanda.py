@@ -69,8 +69,12 @@ class NANDA:
         # Register with the registry if PUBLIC_URL is set
         public_url = os.getenv("PUBLIC_URL")
         api_url = os.getenv("API_URL")
+        agent_id = os.getenv("AGENT_ID")
+        print(f"🔧 Public URL: {public_url}")
+        print(f"🔧 API URL: {api_url}")
+        print(f"🔧 Agent ID: {agent_id}")
         if public_url:
-            register_with_registry(AGENT_ID, public_url, api_url)
+            register_with_registry(agent_id, public_url, api_url)
         else:
             print("WARNING: PUBLIC_URL environment variable not set. Agent will not be registered.")
         
