@@ -95,15 +95,15 @@ class NANDA:
         Args:
             anthropic_key (str): Anthropic API key
             domain (str): Domain name for the server
-            agent_id (str): Agent ID (default: "nanda_api")
+            agent_id (str): Agent ID (default: auto-generated based on domain)
             port (int): Agent bridge port (default: 6000)
-            api_port (int): Flask API port (default: 5000)
+            api_port (int): Flask API port (default: 6001)
             registry (str): Registry URL (optional)
             public_url (str): Public URL for the Agent Bridge (optional)
             api_url (str): API URL for the User Client (optional)
-            cert (str): Path to SSL certificate file (optional)
-            key (str): Path to SSL key file (optional)
-            ssl (bool): Enable SSL (default: False)
+            cert (str): Path to SSL certificate file (optional, defaults to Let's Encrypt path)
+            key (str): Path to SSL key file (optional, defaults to Let's Encrypt path)
+            ssl (bool): Enable SSL (default: True, uses Let's Encrypt certificates)
         """
         # Get the server IP address (assumes a public IP)
         def get_server_ip():
@@ -227,18 +227,21 @@ class NANDA:
         # Configure SSL context if needed
         ssl_context = None
         if ssl:
-            if cert and key:
-                if os.path.exists(cert) and os.path.exists(key):
-                    ssl_context = (cert, key)
-                    print(f"🔒 Using SSL certificates from: {cert}, {key}")
-                else:
-                    print("❌ ERROR: Certificate files not found at specified paths")
-                    print(f"Certificate path: {cert}")
-                    print(f"Key path: {key}")
-                    sys.exit(1)
+            # Set default certificate paths based on domain if not provided
+            if not cert or not key:
+                cert = f"/etc/letsencrypt/live/{domain}/fullchain.pem"
+                key = f"/etc/letsencrypt/live/{domain}/privkey.pem"
+                print(f"🔒 Using default Let's Encrypt certificates for domain: {domain}")
+            
+            if os.path.exists(cert) and os.path.exists(key):
+                ssl_context = (cert, key)
+                print(f"🔒 Using SSL certificates from: {cert}, {key}")
             else:
-                print("❌ ERROR: SSL enabled but certificate paths not provided")
-                print("Please provide cert and key arguments")
+                print("❌ ERROR: Certificate files not found at specified paths")
+                print(f"Certificate path: {cert}")
+                print(f"Key path: {key}")
+                print(f"💡 Make sure Let's Encrypt certificates exist for domain: {domain}")
+                print(f"💡 You can generate them with: certbot --nginx -d {domain}")
                 sys.exit(1)
         
         try:
