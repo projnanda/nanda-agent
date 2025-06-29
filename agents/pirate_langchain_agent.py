@@ -13,6 +13,7 @@ from nanda import NANDA
 
 # Configuration
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+DOMAIN_NAME = os.getenv("DOMAIN_NAME", "localhost")
 
 def create_pirate_improvement():
     """Create LangChain-based pirate improvement function"""
@@ -79,7 +80,8 @@ if __name__ == "__main__":
         print("🚀 Starting agent_bridge server with pirate LangChain improvement...")
         
         # Start the server
-        nanda.start_server()
+        # nanda.start_server()
+        nanda.start_server_api(ANTHROPIC_API_KEY, DOMAIN_NAME)
         
     except ValueError as e:
         print(f"❌ {e}")
