@@ -70,9 +70,26 @@ class NANDA:
         public_url = os.getenv("PUBLIC_URL")
         api_url = os.getenv("API_URL")
         agent_id = os.getenv("AGENT_ID")
-        print(f"🔧 Public URL: {public_url}")
-        print(f"🔧 API URL: {api_url}")
-        print(f"🔧 Agent ID: {agent_id}")
+
+        ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY") or "your key"
+        AGENT_ID = os.getenv("AGENT_ID", "default")  # Default to 'default' if not specified
+        PORT = int(os.getenv("PORT", "6000"))
+        TERMINAL_PORT = int(os.getenv("TERMINAL_PORT", "6010"))
+
+
+        UI_MODE = os.getenv("UI_MODE", "true").lower() in ("true", "1", "yes", "y")
+        UI_CLIENT_URL = os.getenv("UI_CLIENT_URL", "")
+        print(f"🔧 UI_CLIENT_URL: {UI_CLIENT_URL}")
+
+        # os.environ["ANTHROPIC_API_KEY"] = ANTHROPIC_API_KEY
+        # os.environ["AGENT_ID"] = AGENT_ID
+        # os.environ["PORT"] = str(PORT)
+        # os.environ["PUBLIC_URL"] = public_url
+        # os.environ['API_URL'] = api_url
+        # os.environ["REGISTRY_URL"] = run_ui_agent_https.get_registry_url()
+        # os.environ["UI_MODE"] = "true"
+        # os.environ["UI_CLIENT_URL"] = f"{api_url}/api/receive_message"
+
         if public_url:
             register_with_registry(agent_id, public_url, api_url)
         else:
@@ -189,6 +206,8 @@ class NANDA:
         os.environ["REGISTRY_URL"] = run_ui_agent_https.get_registry_url()
         os.environ["UI_MODE"] = "true"
         os.environ["UI_CLIENT_URL"] = f"{api_url}/api/receive_message"
+        
+
         
         # Create unique log directories for each agent
         log_dir = f"logs_{agent_id}"
