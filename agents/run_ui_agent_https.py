@@ -224,10 +224,19 @@ def receive_message():
         timestamp = data.get('timestamp', '')
        
         reg_url = get_registry_url()
+        print(f"[DEBUG] Looking up sender name for agent: {from_agent}")
+        print(f"[DEBUG] Registry URL: {reg_url}")
+        print(f"[DEBUG] Full sender lookup URL: {reg_url}/sender/{from_agent}")
+        
         sender_name = requests.get(
                 f"{reg_url}/sender/{from_agent}",
                 verify=False  # For development with self-signed certs
             )
+        
+        print(f"[DEBUG] Sender lookup response status: {sender_name.status_code}")
+        print(f"[DEBUG] Sender lookup response content: {sender_name.content}")
+        print(f"[DEBUG] Sender lookup response text: {sender_name.text}")
+        
         sender_name = sender_name.json().get("sender_name")
 
         print("\n--- New message received ---")

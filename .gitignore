@@ -4,3 +4,7 @@ jinoos/
 agents/__pycache__/
 conversation_logs/
 agents/test.py
+.claude
+dist/
+nanda_agent/
+*egg-info

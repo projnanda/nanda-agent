@@ -256,23 +256,37 @@ def send_to_terminal(text, terminal_url, conversation_id, metadata=None):
 
 
 def send_to_ui_client(message_text, from_agent, conversation_id):
+    print(f"[DEBUG] send_to_ui_client called with:")
+    print(f"[DEBUG]   message_text: {message_text[:100]}...")
+    print(f"[DEBUG]   from_agent: {from_agent}")
+    print(f"[DEBUG]   conversation_id: {conversation_id}")
+    print(f"[DEBUG]   UI_CLIENT_URL: {UI_CLIENT_URL}")
+    
     if not UI_CLIENT_URL:
         print(f"No UI client URL configured. Cannot send message to UI client")
         return False
 
     try:
+        payload = {
+            "message": message_text,
+            "from_agent": from_agent,
+            "conversation_id": conversation_id,
+            "timestamp": datetime.now().isoformat()
+        }
+        print(f"[DEBUG] Payload being sent: {payload}")
         print(f"Sending message to UI client: {message_text[:50]}...")
+        
         response = requests.post(
             UI_CLIENT_URL,
-            json={
-                "message": message_text,
-                "from_agent": from_agent,
-                "conversation_id": conversation_id,
-                "timestamp": datetime.now().isoformat()
-            },
+            json=payload,
             timeout=10,
             verify=False # add this line to disable SSL verification
         )
+        
+        print(f"[DEBUG] Response status code: {response.status_code}")
+        print(f"[DEBUG] Response headers: {response.headers}")
+        print(f"[DEBUG] Response content: {response.content}")
+        print(f"[DEBUG] Response text: {response.text}")
         
         if response.status_code == 200:
             print(f"Successfully sent message to UI client")
