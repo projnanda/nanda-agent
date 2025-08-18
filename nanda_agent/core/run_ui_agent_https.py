@@ -10,7 +10,7 @@ import threading
 import json
 from flask import Flask, request, jsonify, Response, stream_with_context
 from flask_cors import CORS
-from python_a2a import A2AClient, Message, TextContent, MessageRole
+from python_a2a import A2AClient, Message, TextContent, MessageRole, Metadata
 from queue import Queue
 from threading import Event
 import ssl
@@ -169,7 +169,7 @@ def send_message():
                 role=MessageRole.USER,
                 content=TextContent(text=message_text),
                 conversation_id=conversation_id,
-                metadata=metadata
+                metadata=Metadata(custom_fields=metadata)
             )
         )
         print(f"Response: {response}")

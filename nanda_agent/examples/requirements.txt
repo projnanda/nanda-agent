@@ -1,0 +1,13 @@
+# Core dependencies for langchain_pirate.py
+langchain-core
+langchain-anthropic
+python-dotenv
+
+# CrewAI dependencies for crewai_sarcastic.py
+crewai
+crewai-tools
+
+
+# NANDA Agent (from GitHub)
+# Install with: pip install git+https://github.com/projnanda/nanda-agent.git@custom-improvement-package
+nanda-agent

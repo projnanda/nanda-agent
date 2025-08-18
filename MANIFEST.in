@@ -1,0 +1,8 @@
+
+include README.md
+include LICENSE
+include requirements.txt
+recursive-include nanda_agent *.py
+recursive-include nanda_agent *.txt
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
